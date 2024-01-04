@@ -23,11 +23,12 @@ class Agent:
     def __init__(self) -> None:
         self.memory = dq(maxlen = PARAMS.MAX_MEM)
         self.radius = PARAMS.RADIUS
-        self.state = PARAMS.INIT_STATE
+        self.state = PARAMS.INIT_STATE #
         self.epsilon = PARAMS.EPSILON
         self.alpha = PARAMS.ALPHA
         self.beta = PARAMS.BETA
         self.gamma = PARAMS.GAMMA
+        self.model = ...
 
         return None
 
@@ -35,6 +36,19 @@ class Agent:
     
     """
     def move(self) -> None:
+        moves = [-1,0,1]
+        
+        if rd.uniform(0,1) > self.epsilon: 
+            state0 = pt.tensor(state, dtype=pt.float)
+            qs = self.model(state0)
+            move = pt.argmax(qs).item()
+        else: 
+            xmove = rd.choice(moves)
+            ymove = rd.choice(moves)
+
+        state = (state[0] + xmove, state[1] + ymove)
+
+        
         return None
 
     """ self.remember():
