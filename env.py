@@ -89,6 +89,8 @@ class BallAI:
         """
         i might adjust this wholesale st we just do
         pygame.draw.circle(surface=screen, color="red", center=player_pos, radius=2)
+        collision detection should be done inside the agent.py vs the env.py
+        bc we aren't playing snake anymore
         """
         # [straight, right, left]
         # i.e. [1, 0, 0] = no change, [0, 1, 0] = right turn, [0, 0, 1] = left turn
