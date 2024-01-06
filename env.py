@@ -30,7 +30,7 @@ BLOCK_SIZE = 10
 SPEED = 2
 
 
-class BallAI:
+class BallGame:
     def __init__(self, w=1280, h=720, radius=2, file_path="assets/env_1280_720.png"):
         self.radius = radius
         self.w, self.h = w, h

@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 from matplotlib.pyplot import plot  # type: ignore
 
-from env import BallAI, Direction, Point
+from env import BallGame, Direction, Point
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
@@ -13,6 +13,7 @@ LR = 0.001
 
 def random_one_hot():
     # For the one-hot encoding
+    # TODO: diagonal movement
     one_hot = [0, 0, 0, 0, 0]
     random_index = random.randint(0, 4)
     one_hot[random_index] = 1  # Set the selected index to 1
@@ -108,7 +109,7 @@ def play():
     total_score = 0
     record = 0
     agent = RandomAgent()
-    game = BallAI()
+    game = BallGame()
     while True:
         # get old state
         state_old = agent.get_state(game)
