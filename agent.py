@@ -1,6 +1,7 @@
 import torch as pt
 import random as rd 
 import numpy as np 
+import math
 import params as PARAMS
 from collections import deque as dq
 
@@ -35,20 +36,22 @@ class Agent:
     """ self.move():
     
     """
-    def move(self) -> None:
+    def choose_move(self) -> None:
         moves = [-1,0,1]
         
         if rd.uniform(0,1) > self.epsilon: 
-            state0 = pt.tensor(state, dtype=pt.float)
+            state0 = pt.tensor(self.state, dtype=pt.float)
             qs = self.model(state0)
-            move = pt.argmax(qs).item()
+            move = pt.argmax(qs) # gets the index out from q values
+            rem = move%3
+            xmove = rem - 1
+            ymove = (move-rem)/3 - 1 
         else: 
             xmove = rd.choice(moves)
             ymove = rd.choice(moves)
 
-        state = (state[0] + xmove, state[1] + ymove)
+        self.state = (self.state[0] + xmove, self.state[1] + ymove)
 
-        
         return None
 
     """ self.remember():
