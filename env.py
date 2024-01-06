@@ -32,6 +32,8 @@ BLOCK_SIZE = 10  # must be smaller than wall thickness to prevent teleporting
 # TODO: function to determine radius to make ball cant just move too much in empty space between walls
 # TODO: by giving aerial view based on max or mean distance between walls
 #       be clever with solving this by using less of the image as the proxy of the rest
+# TODO: state info should 1d so just flatten state info
+
 SPEED = 2
 
 
