@@ -18,29 +18,42 @@ from collections import deque as dq
     * alpha:
     * beta: 
     * gamma:
+    * batch: 
+    * gameboard:    exit is an int tuple that represents our exit and 
+                    walls is a 2d array with 1's as walls and 0's as 
+                    possibles (exit is 0 and if the entrance is a break 
+                    in the maze it is a 1 - there should only be 1 maze break) 
 """
 class Agent:
 
     def __init__(self) -> None:
         self.memory = dq(maxlen = PARAMS.MAX_MEM)
         self.radius = PARAMS.RADIUS
-        self.state = PARAMS.INIT_STATE #
         self.epsilon = PARAMS.EPSILON
         self.alpha = PARAMS.ALPHA
         self.beta = PARAMS.BETA
         self.gamma = PARAMS.GAMMA
+        self.batch = PARAMS.BATCH_SIZE
+        self.gameboard = ... 
         self.model = ...
+        self.trainer = ...
 
         return None
+
+    def cycle(self, state):
+        action, new_state = self.choose_and_move(state)
+        reward, done = self.reward()
+        self.remember(state, action, reward, new_state, done)
 
     """ self.move():
     
     """
-    def choose_move(self) -> None:
+    def choose_and_move(self, state) -> None:
         moves = [-1,0,1]
+        choice = [0, 0, 0, 0, 0, 0, 0, 0, 0]
         
         if rd.uniform(0,1) > self.epsilon: 
-            state0 = pt.tensor(self.state, dtype=pt.float)
+            state0 = pt.tensor(state, dtype=pt.float)
             qs = self.model(state0)
             move = pt.argmax(qs) # gets the index out from q values
             rem = move%3
@@ -50,30 +63,52 @@ class Agent:
             xmove = rd.choice(moves)
             ymove = rd.choice(moves)
 
-        self.state = (self.state[0] + xmove, self.state[1] + ymove)
+        new_state = (state[0] + xmove, state[1] + ymove)
+        choice[move] = 1
 
-        return None
+        return choice, new_state
 
     """ self.remember():
     
     """
-    def remember(self) -> None:
+    def remember(self, state, action, reward, new_state, done) -> None:
+        self.memory.append((state, action, reward, new_state, done))
         return None
     
     """ self.train_stm():
 
     """
-    def train_stm(self) -> None:
+    def train_stm(self, state, action, reward, new_state, done) -> None:
+        self.trainer(state, action, reward, new_state, done)
         return None
 
     """ self.train_ltm():
     
     """
     def train_ltm(self) -> None:
+        if len(self.memory) > PARAMS.BATCH_SIZE:
+            mini_batch = rd.sample(self.memory, PARAMS.BATCH_SIZE) # list of tuples
+        else:
+            mini_batch = self.memory
+
+        states, actions, rewards, next_states, dones = zip(*mini_batch)
+        self.trainer.train_step(states, actions, rewards, next_states, dones)
+
         return None
 
     """ self.reward():
     
     """
-    def reward(self) -> None:
-        return None
+    def reward(self) -> int:
+        # works only if all walls are labeled as 1 (and even entrance is labeled as 1)
+        if self.gameboard.walls[self.state[0]][self.state[1]] == 1: 
+            reward = -10
+            game_over = True
+        elif self.gameboard.exit == self.state:
+            reward = 100
+            game_over = True
+        else:
+            reward = 5 
+            game_over = False
+
+        return reward, game_over
