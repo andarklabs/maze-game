@@ -13,7 +13,6 @@ from collections import deque as dq
 
     * memory: 
     * radius:
-    * state: 
     * epsilon:
     * alpha:
     * beta: 
@@ -40,10 +39,12 @@ class Agent:
 
         return None
 
-    def cycle(self, state):
+    def cycle(self, state) -> None:
         action, new_state = self.choose_and_move(state)
         reward, done = self.reward()
         self.remember(state, action, reward, new_state, done)
+        self.train_stm(state, action, reward, new_state, done)
+        return None
 
     """ self.move():
     
@@ -112,3 +113,5 @@ class Agent:
             game_over = False
 
         return reward, game_over
+
+
