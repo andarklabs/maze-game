@@ -26,11 +26,20 @@ BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
-BLOCK_SIZE = 10
+BLOCK_SIZE = 10  # must be smaller than wall thickness to prevent teleporting
+# TODO: function determine wall thickness, the shortest thickness of paint stroke (ie. | | vs |   |)
+
+# TODO: function to determine radius to make ball cant just move too much in empty space between walls
+# TODO: by giving aerial view based on max or mean distance between walls
+#       be clever with solving this by using less of the image as the proxy of the rest
+# TODO: state info should 1d so just flatten state info
+
 SPEED = 2
 
 
-class BallAI:
+class BallGame:
+    """this env is based on given a picture"""
+
     def __init__(self, w=1280, h=720, radius=2, file_path="assets/env_1280_720.png"):
         self.radius = radius
         self.w, self.h = w, h
