@@ -1,7 +1,7 @@
 # ref: https://github.com/patrickloeber/snake-ai-pytorch
 from collections import namedtuple
 from enum import Enum
-from typing import Tuple, Union
+from typing import Tuple
 
 import numpy as np  # type: ignore
 import pygame
@@ -34,17 +34,19 @@ BLOCK_SIZE = 10  # must be smaller than wall thickness to prevent teleporting
 #       be clever with solving this by using less of the image as the proxy of the rest
 # TODO: state info should 1d so just flatten state info
 
-SPEED = 2
+SPEED = 100
 
 
 class BallGame:
     """this env is based on given a picture"""
 
-    def __init__(self, w=1280, h=720, radius=2, file_path="assets/env_1280_720.png"):
+    def __init__(
+        self, w=1280, h=720, radius=6, file_path="../assets/env_1280_720_2.png"
+    ):
         self.radius = radius
         self.w, self.h = w, h
         self.bg_path = file_path  # background image path
-        self.boundary = self._interpret_boundary(file_path)
+        self.boundary = self._interpret_boundary()
         # init display
         self.display = pygame.display.set_mode((self.w, self.h))
         pygame.display.set_caption("Ball")
@@ -73,9 +75,14 @@ class BallGame:
         # 3. check if game over
         reward = 0
         game_over = False
-        if self._is_collision() or self.frame_iteration > 1000:
+        if self._is_collision(self.location) or self.frame_iteration > 1000:
             game_over = True
-            reward = -10
+            self.score += 1
+            reward = 100
+            return reward, game_over, self.score
+
+        if self._escaped(self.location):
+            reward = 100
             return reward, game_over, self.score
 
         # 4. update ui and clock
@@ -87,24 +94,21 @@ class BallGame:
     def _is_collision(
         # self, player_pos: pygame.Vector2, boundary: set[Tuple[int, int]]
         self,
-        pt: Union[Point, None] = None,
+        pt: Point,
     ) -> bool:
         """Return True if the player is colliding with the boundary."""
-        if pt is None:
-            # handle issue of continuous values not being picked up
-            if (int(self.location.x), int(self.location.y)) in self.boundary:
-                return True
-            return False
-        else:
-            if pt.x < 0 or pt.x > self.w or pt.y < 0 or pt.y > self.h:
-                return True
-            if (int(pt.x), int(pt.y)) in self.boundary:
-                return True
-            return False
+        if (int(pt.x), int(pt.y)) in self.boundary:
+            return True
+        return False
 
-    def _interpret_boundary(self, image_path: str) -> set[Tuple[int, int]]:
+    def _escaped(self, pt: Point) -> bool:
+        if pt.x < 0 or pt.x > self.w or pt.y < 0 or pt.y > self.h:
+            return True
+        return False
+
+    def _interpret_boundary(self) -> set[Tuple[int, int]]:
         """Interpret the boundary of the image as a list of points."""
-        image = pygame.image.load(image_path)
+        image = pygame.image.load(self.bg_path)
         boundary = set()
         for i in range(image.get_width()):
             for j in range(image.get_height()):
@@ -113,12 +117,19 @@ class BallGame:
                     boundary.add((i, j))
         return boundary
 
+    def extra_state_info(self):
+        image = pygame.image.load(self.bg_path)
+        local_image = image.subsurface(
+            (self.location.x - 5, self.location.y - 5, 33, 33)
+        )
+        return local_image
+
     def _update_ui(self):
         self.display.fill("black")
         bg = pygame.image.load(self.bg_path)
         self.display.blit(bg, (0, 0))
         pygame.draw.circle(
-            surface=self.display, color="red", center=self.location, radius=2
+            surface=self.display, color="blue", center=self.location, radius=self.radius
         )
         pygame.display.flip()
 
