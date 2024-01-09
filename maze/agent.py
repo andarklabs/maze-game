@@ -2,7 +2,7 @@ import torch as pt
 import random as rd 
 import numpy as np 
 import math
-import params as PARAMS
+import maze.params as PARAMS
 from collections import deque as dq
 
 """ Agent Class:

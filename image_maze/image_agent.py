@@ -8,7 +8,7 @@ import torch
 from env import BallGame, Direction, Point
 from IPython import display
 
-from model import Linear_QNet, QTrainer
+from maze.model import Linear_QNet, QTrainer
 
 matplotlib.use("TkAgg")
 
