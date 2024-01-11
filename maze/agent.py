@@ -28,7 +28,7 @@ class Agent:
         self.epsilon = PARAMS.EPSILON
         self.beta = PARAMS.BETA
         self.gameboard = Board()
-        self.model = Model(8,256,9)
+        self.model = Model(PARAMS.FLAT_SIZE,256,4)
         self.trainer = Trainer(self.model, lr=PARAMS.ALPHA, gamma=PARAMS.GAMMA)
 
         return None
@@ -46,7 +46,7 @@ class Agent:
     """
     def choose_and_move(self, state) -> None:
         moves = [-1,0,1]
-        choice = [0, 0, 0, 0, 0, 0, 0, 0, 0] # output is size 9
+        choice = [0, 0, 0, 0] # output is size 4
         
         if rd.uniform(0,1) > self.epsilon: 
             state0 = pt.tensor(state, dtype=pt.float)
@@ -61,6 +61,8 @@ class Agent:
 
         new_state = (state[0] + xmove, state[1] + ymove)
         choice[move] = 1
+
+        self.gameboard.rat = new_state
 
         return choice, new_state
 
