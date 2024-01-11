@@ -14,7 +14,7 @@ class Board:
                         [ 1.,  1.,  1.,  1.,  0.,  1.,  1.,  1.]
                     ]
         self.initial_position = (0,0)
-        self.exit = (9,9)
+        self.exit = (7,7)
 
     def show(self, rat):
         plt.grid('on')
@@ -33,6 +33,7 @@ class Board:
         plt.show()
 
         return None
-
-board = Board()
-board.show((0,0))
+    
+if __name__ == '__main__':
+    board = Board()
+    board.show((0,0))

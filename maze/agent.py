@@ -2,7 +2,8 @@ import torch as pt
 import random as rd 
 from env import Board
 from model import Model, Trainer
-import maze.params as PARAMS
+import params as PARAMS
+import utils
 from collections import deque as dq
 
 """ Agent Class:
@@ -13,7 +14,6 @@ from collections import deque as dq
 
     * memory: 
     * epsilon:
-    * beta: 
     * position:
     * gameboard:    exit is an int tuple that represents our exit and 
                     walls is a 2d array with 1's as walls and 0's as 
@@ -23,23 +23,38 @@ from collections import deque as dq
 class Agent:
 
     def __init__(self) -> None:
-        self.memory = dq(maxlen = PARAMS.MAX_MEM)
-        self.epsilon = PARAMS.EPSILON
-        self.beta = PARAMS.BETA
         self.gameboard = Board()
-        self.moves = [(-1,0),(1,0),(0,-1),(0,1)]
         self.position = self.gameboard.initial_position
-        self.model = Model(PARAMS.FLAT_SIZE,256,4)
+        self.state = self.get_state()
+        self.moves = [(-1,0),(1,0),(0,-1),(0,1)]
+        self.memory = dq(maxlen = PARAMS.MAX_MEM)
+        self.epsilon = PARAMS.EPSILON_INIT
+        self.device = "mps" if pt.backends.mps.is_available() else "cpu"
+        self.model = Model(PARAMS.FLAT_SIZE,PARAMS.HIDDEN_SIZE,PARAMS.CHOICES, self.device)
         self.trainer = Trainer(self.model, lr=PARAMS.ALPHA, gamma=PARAMS.GAMMA)
 
+        print(f"Using device: {self.device}")
         return None
+    
+    def get_state(self):
+        state = self.gameboard.maze # state is all gameboard info
+        state[self.position[0]][self.position[1]] = 2 # with the rat
+        state[self.gameboard.exit[0]][self.gameboard.exit[1]] = 3 # and the exit
+        return utils.flatten(state) # all flattened
 
-    def cycle(self, state) -> None:
-        action, new_state = self.choose_and_move(state)
+    """ self.cycle():
+
+    """
+    def cycle(self, show = False) -> bool:
+        state, action, new_state = self.choose_and_move()
         reward, done = self.reward()
         self.remember(state, action, reward, new_state, done)
         self.train_stm(state, action, reward, new_state, done)
-        self.gameboard.show()
+        if show: self.gameboard.show()
+        return done
+    
+    def reset(self) -> None:
+        self.position = self.gameboard.initial_position
         return None
 
     """ self.move():
@@ -48,34 +63,36 @@ class Agent:
     def choose_and_move(self) -> None:
 
         # prepare to pass state:
-        state = self.gameboard.maze # state is all gameboard info
-        state[self.position[0]][self.position[1]] = 2
-        state[self.gameboard.exit[0]][self.gameboard.exit[1]] = 3
+        state = self.state # state is all gameboard info
 
         if rd.uniform(0,1) > self.epsilon:  # we exploit:
             state0 = pt.tensor(state, dtype=pt.float)
             qs = self.model(state0)
             indx = pt.argmax(qs) # gets the index out from q values
-            move = self.moves[indx]
-        else:                               # we explore:
-            move = rd.choice(self.moves)
+        else:   # we explore:
+            indx = rd.randint(0,PARAMS.CHOICES-1)
+
+        move = self.moves[indx]
 
         # crate new_state:
         new_state = state
-        # remove the old rat
-        new_state[self.position[0]][self.position[1]] = 1 
+        # remove the old rat (from flattened new_state)
+        new_state[self.position[0] * PARAMS.DIM + self.position[1]] = 1 
     
         # change the rat's position
         self.position = (self.position[0] + move[0], self.position[1] + move[1])
         
         # build the new rat
-        new_state[self.position[0]][self.position[1]] = 2 
+        new_state[self.position[0] * PARAMS.DIM + self.position[1]] = 2 
+
+        # move the rat
+        self.state = new_state
 
         # create choice array
         choice = [0, 0, 0, 0] # output is size 4
-        choice[move] = 1
+        choice[indx] = 1
 
-        return choice, new_state
+        return state, choice, new_state
 
     """ self.remember():
     
@@ -88,7 +105,7 @@ class Agent:
 
     """
     def train_stm(self, state, action, reward, new_state, done) -> None:
-        self.trainer(state, action, reward, new_state, done)
+        self.trainer.train_step(state, action, reward, new_state, done)
         return None
 
     """ self.train_ltm():
@@ -123,3 +140,21 @@ class Agent:
         return reward, game_over
 
 
+def play():
+    rat = Agent()
+
+    # train
+    for _ in range(PARAMS.GAMES):
+        while rat.cycle():
+            pass
+        rat.train_ltm()
+        rat.reset()
+        rat.epsilon -= PARAMS.EPSILON_DEC
+
+    # test
+    while rat.cycle():
+        rat.gameboard.show(rat.position)
+
+if __name__ == "__main__":
+    play()
+    

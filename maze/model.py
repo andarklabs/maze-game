@@ -5,10 +5,11 @@ import torch.nn.functional as F
 import os
 
 class Model(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
+    def __init__(self, input_size, hidden_size, output_size, device):
         super().__init__()
-        self.linear1 = nn.Linear(input_size, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, output_size)
+        self.linear1 = nn.Linear(input_size, hidden_size,device=device)
+        self.linear2 = nn.Linear(hidden_size, output_size,device=device)
+        self.device = device
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
@@ -29,15 +30,16 @@ class Trainer:
         self.lr = lr
         self.gamma = gamma
         self.model = model
+        self.device = self.model.device
         self.optimizer = optim.Adam(model.parameters(), lr=self.lr)
         self.criterion = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, done):
         
-        state = pt.tensor(state, dtype=pt.float)
-        next_state = pt.tensor(next_state, dtype=pt.float)
-        action = pt.tensor(action, dtype=pt.long)
-        reward = pt.tensor(reward, dtype=pt.float)
+        state = pt.tensor(state, dtype=pt.float,device=self.device)
+        next_state = pt.tensor(next_state, dtype=pt.float, device=self.device)
+        action = pt.tensor(action, dtype=pt.long, device=self.device)
+        reward = pt.tensor(reward, dtype=pt.float, device=self.device)
 
         if len(state.shape) == 1: # short term memory check (1,x)
             state = pt.unsqueeze(state, 0)
