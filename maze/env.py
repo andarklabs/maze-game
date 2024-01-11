@@ -27,7 +27,7 @@ class Env:
 
         canvas[rat[0], rat[1]] = 0.3   # rat cell
         canvas[nrows-1, ncols-1] = 0.9 # cheese cell
-        plt.imshow(canvas, interpolation='none', cmap='gray')
+        plt.imshow(canvas, interpolation='none', cmap='afmhot')
         plt.show()
 
         return None
