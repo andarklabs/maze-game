@@ -33,36 +33,33 @@ class Trainer:
         self.criterion = nn.MSELoss()
 
     def train_step(self, state, action, reward, next_state, done):
+        
         state = pt.tensor(state, dtype=pt.float)
         next_state = pt.tensor(next_state, dtype=pt.float)
         action = pt.tensor(action, dtype=pt.long)
         reward = pt.tensor(reward, dtype=pt.float)
-        # (n, x)
 
-        if len(state.shape) == 1:
-            # (1, x)
+        if len(state.shape) == 1: # short term memory check (1,x)
             state = pt.unsqueeze(state, 0)
             next_state = pt.unsqueeze(next_state, 0)
             action = pt.unsqueeze(action, 0)
             reward = pt.unsqueeze(reward, 0)
             done = (done, )
 
-        # 1: predicted Q values with current state
+        # predict Q values based on current state
         pred = self.model(state)
 
         target = pred.clone()
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
+                # Q_new = r + y * max(future_Qs)
                 Q_new = reward[idx] + self.gamma * pt.max(self.model(next_state[idx]))
 
             target[idx][pt.argmax(action[idx]).item()] = Q_new
     
-        # 2: Q_new = r + y * max(next_predicted Q value) -> only do this if not done
-        # pred.clone()
-        # preds[argmax(action)] = Q_new
+        # optimize with new q vals
         self.optimizer.zero_grad()
         loss = self.criterion(target, pred)
         loss.backward()
-
         self.optimizer.step()

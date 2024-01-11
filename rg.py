@@ -1,30 +1,140 @@
 import pygame
+import time
 
-TILE_SIZE = 64
-WIDTH = TILE_SIZE * 8
-HEIGHT = TILE_SIZE * 8
 
-tiles = ['empty', 'wall', 'goal']
+pygame.init()
 
-maze = [
-    [1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1, 2, 0, 1],
-    [1, 0, 1, 0, 1, 1, 0, 1],
-    [1, 0, 1, 1, 0, 0, 1, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1],
-    [1, 0, 1, 0, 1, 0, 1, 1],
-    [1, 0, 1, 1, 0, 0, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1]
-]
+width = 900
+height = 650
 
-player = Actor("alien", anchor=(0, 0), pos=(1 * TILE_SIZE, 1 * TILE_SIZE))
+dark = (109, 104, 117)
 
-def draw():
-    screen.clear()
-    for row in range(len(maze)):
-        for column in range(len(maze[row])):
-            x = column * TILE_SIZE
-            y = row * TILE_SIZE
-            tile = tiles[maze[row][column]]
-            screen.blit(tile, (x, y))
-    player.draw()
+gameDisplay = pygame.display.set_mode((width, height))
+pygame.display.set_caption("MAZE Game")
+
+maze=[  [1,3,1,0,1,0,1,0,0,0,0,1,1,0,0],
+        [1,0,1,0,1,0,1,0,1,0,0,1,0,0,0],
+        [1,0,0,0,1,0,0,0,1,0,0,0,0,1,0],
+        [1,0,1,0,1,1,0,1,1,1,1,1,0,1,0],
+        [1,0,1,0,1,0,0,1,0,0,1,0,0,1,0],
+        [1,1,1,0,1,0,0,0,0,0,1,0,0,1,0],
+        [1,0,0,0,1,0,0,0,1,0,1,1,1,0,0],
+        [1,0,1,1,1,1,1,1,1,0,1,0,0,0,0],
+        [1,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+        [1,0,0,0,0,1,1,0,1,1,1,1,1,1,0],
+        [1,1,1,1,1,1,0,1,0,0,0,0,0,0,2],]
+
+dest = (10,10)
+
+#function to render the maze
+def renderMaze(maze):
+    x = 0
+    y = 0
+    for row in maze:
+        for block in row:
+        #block dimension 60*60 
+        # 0 represents movable cell
+            if block == 0:
+                pygame.draw.rect(gameDisplay, (255, 205, 178), (x, y, 60, 60))
+        # 1 represents wall
+            elif block == 1:
+                pygame.draw.rect(gameDisplay, (229, 152, 155) ,(x, y, 60, 60))
+        # 2 represents destination
+            elif block == 2:
+                pygame.draw.rect(gameDisplay, (255, 183, 0), (x, y, 60, 60))
+                
+        # to display the starting cell
+            elif block == 3:
+                pygame.draw.rect(gameDisplay, (120, 150, 100), (x, y, 60, 60))
+            
+        #since dimension of rectangle is 60*60, we move the starting coordinate after each block is drawn
+            x = x+60
+        y = y+60
+        x = 0
+
+def displayText(text):
+    renderFont = pygame.font.Font('freesansbold.ttf', 45)
+    
+    textsc = renderFont.render(text, True, dark)
+
+    surface, rect = textsc, textsc.get_rect()
+
+
+    rect.center = ((width/2),(height/2))
+
+
+    gameDisplay.blit(surface, rect)
+
+    pygame.display.update()
+
+    #delay of 1 second
+    time.sleep(1)
+
+while True:
+    renderMaze(maze)
+    #dest determines that destination is reached and ends game.
+    if dest == 1:
+        displayText("Yay! Destination reached!")
+        exit()
+
+    #accessing the event queue and the event loop
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+
+        #keydown when a key is pressed on the keyboard
+        if event.type == pygame.KEYDOWN:
+        
+            #if left arrow is pressed
+            if event.key == pygame.K_LEFT:
+                block = maze[y][x-1]
+                if block == 0:
+                    maze[y][x-1]= 2
+                    maze[y][x] = 0
+                    x = x-1
+
+                elif block == 2:
+                    maze[y][x-1] = 0
+                    maze[y][x] = 0
+                    x = x-1                    
+                    dest = 1
+            
+            #if right arrow is pressed
+            if event.key == pygame.K_RIGHT:
+                block = maze[y][x +1]
+                
+                if block == 0:
+                    maze[y][x + 1] =2
+                    maze[y][x]=0
+                    x = x+1
+                elif block == 2:
+                    maze[y][x+ 1] = 0
+                    maze[y][x] = 0
+                    x = x + 1
+                    dest = 1
+        
+            #up arrow is pressed
+            if event.key == pygame.K_UP:
+                block = maze[y- 1][x]
+                if block == 0:
+                    maze[y -1][x]= 2
+                    maze[y][x]= 0
+                    y =y -1
+                elif block == 2:
+                    maze[y -1][x] = 0
+                    maze[y][x] = 0
+                    y = y- 1
+                    dest=1
+            
+            #down arrow is pressed
+            if event.key == pygame.K_DOWN:
+                block=maze[y +1][x]
+                if block == 0:
+                    maze[y+ 1][x]=2
+                    maze[y][x]=0
+                    y = y + 1
+                elif block == 2:
+                    maze[y +1][x] = 1
+                    maze[y][x] = 0
+                    y = y+ 1
+                    dest = 1
