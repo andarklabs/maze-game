@@ -1,7 +1,7 @@
 import torch as pt
 import random as rd 
-import numpy as np 
-import math
+from env import Board
+from model import Model, Trainer
 import maze.params as PARAMS
 from collections import deque as dq
 
@@ -14,10 +14,7 @@ from collections import deque as dq
     * memory: 
     * radius:
     * epsilon:
-    * alpha:
     * beta: 
-    * gamma:
-    * batch: 
     * gameboard:    exit is an int tuple that represents our exit and 
                     walls is a 2d array with 1's as walls and 0's as 
                     possibles (exit is 0 and if the entrance is a break 
@@ -29,13 +26,10 @@ class Agent:
         self.memory = dq(maxlen = PARAMS.MAX_MEM)
         self.radius = PARAMS.RADIUS
         self.epsilon = PARAMS.EPSILON
-        self.alpha = PARAMS.ALPHA
         self.beta = PARAMS.BETA
-        self.gamma = PARAMS.GAMMA
-        self.batch = PARAMS.BATCH_SIZE
-        self.gameboard = ... 
-        self.model = ...
-        self.trainer = ...
+        self.gameboard = Board()
+        self.model = Model(8,256,9)
+        self.trainer = Trainer(self.model, lr=PARAMS.ALPHA, gamma=PARAMS.GAMMA)
 
         return None
 
@@ -44,6 +38,7 @@ class Agent:
         reward, done = self.reward()
         self.remember(state, action, reward, new_state, done)
         self.train_stm(state, action, reward, new_state, done)
+        self.gameboard.show()
         return None
 
     """ self.move():
@@ -51,7 +46,7 @@ class Agent:
     """
     def choose_and_move(self, state) -> None:
         moves = [-1,0,1]
-        choice = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        choice = [0, 0, 0, 0, 0, 0, 0, 0, 0] # output is size 9
         
         if rd.uniform(0,1) > self.epsilon: 
             state0 = pt.tensor(state, dtype=pt.float)
