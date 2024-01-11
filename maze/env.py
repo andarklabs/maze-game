@@ -13,10 +13,10 @@ class Board:
                         [ 1.,  1.,  1.,  0.,  1.,  1.,  1.,  1.],
                         [ 1.,  1.,  1.,  1.,  0.,  1.,  1.,  1.]
                     ]
-        self.rat = (0,0)
+        self.initial_position = (0,0)
         self.exit = (9,9)
 
-    def show(self):
+    def show(self, rat):
         plt.grid('on')
         nrows = 8
         ncols = 8
@@ -27,7 +27,7 @@ class Board:
         ax.set_yticklabels([])
         canvas = np.copy(self.maze)
 
-        canvas[self.rat[0], self.rat[1]] = 0.3   # rat cell
+        canvas[rat[0], rat[1]] = 0.3   # rat cell
         canvas[nrows-1, ncols-1] = 0.9 # cheese cell
         plt.imshow(canvas, interpolation='none', cmap='afmhot')
         plt.show()
@@ -35,4 +35,4 @@ class Board:
         return None
 
 board = Board()
-board.show()
+board.show((0,0))
